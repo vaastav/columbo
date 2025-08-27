@@ -39,17 +39,18 @@ func _() {
 	_ = x[KNicMmioT-28]
 	_ = x[KNicMmioRT-29]
 	_ = x[KNicMmioWT-30]
-	_ = x[KNicTrxT-31]
-	_ = x[KNicTxT-32]
-	_ = x[KNicRxT-33]
-	_ = x[KNetworKEnqueueT-34]
-	_ = x[KNetworKDequeueT-35]
-	_ = x[KNetworKDropT-36]
+	_ = x[KNicDmaWDataT-31]
+	_ = x[KNicTrxT-32]
+	_ = x[KNicTxT-33]
+	_ = x[KNicRxT-34]
+	_ = x[KNetworKEnqueueT-35]
+	_ = x[KNetworKDequeueT-36]
+	_ = x[KNetworKDropT-37]
 }
 
-const _EventType_name = "KEventTKSimSendSyncTKSimProcInEventTKHostInstrTKHostCallTKHostMmioImRespPoWTKHostIdOpTKHostMmioCRTKHostMmioCWTKHostAddrSizeOpTKHostMmioRTKHostMmioWTKHostDmaCTKHostDmaRTKHostDmaWTKHostMsiXTKHostConfTKHostClearIntTKHostPostIntTKHostPciRWTKNicMsixTKNicDmaTKSetIXTKNicDmaITKNicDmaExTKNicDmaEnTKNicDmaCRTKNicDmaCWTKNicMmioTKNicMmioRTKNicMmioWTKNicTrxTKNicTxTKNicRxTKNetworKEnqueueTKNetworKDequeueTKNetworKDropT"
+const _EventType_name = "KEventTKSimSendSyncTKSimProcInEventTKHostInstrTKHostCallTKHostMmioImRespPoWTKHostIdOpTKHostMmioCRTKHostMmioCWTKHostAddrSizeOpTKHostMmioRTKHostMmioWTKHostDmaCTKHostDmaRTKHostDmaWTKHostMsiXTKHostConfTKHostClearIntTKHostPostIntTKHostPciRWTKNicMsixTKNicDmaTKSetIXTKNicDmaITKNicDmaExTKNicDmaEnTKNicDmaCRTKNicDmaCWTKNicMmioTKNicMmioRTKNicMmioWTKNicDmaWDataTKNicTrxTKNicTxTKNicRxTKNetworKEnqueueTKNetworKDequeueTKNetworKDropT"
 
-var _EventType_index = [...]uint16{0, 7, 20, 36, 47, 57, 76, 86, 98, 110, 126, 137, 148, 158, 168, 178, 188, 198, 212, 225, 236, 245, 253, 260, 269, 279, 289, 299, 309, 318, 328, 338, 346, 353, 360, 376, 392, 405}
+var _EventType_index = [...]uint16{0, 7, 20, 36, 47, 57, 76, 86, 98, 110, 126, 137, 148, 158, 168, 178, 188, 198, 212, 225, 236, 245, 253, 260, 269, 279, 289, 299, 309, 318, 328, 338, 351, 359, 366, 373, 389, 405, 418}
 
 func (i EventType) String() string {
 	if i < 0 || i >= EventType(len(_EventType_index)-1) {

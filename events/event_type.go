@@ -36,6 +36,7 @@ const (
 	KNicMmioT
 	KNicMmioRT
 	KNicMmioWT
+	KNicDmaWDataT
 	KNicTrxT
 	KNicTxT
 	KNicRxT
