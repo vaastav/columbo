@@ -1,4 +1,4 @@
-package simulators
+package nicbm
 
 import (
 	"bufio"
