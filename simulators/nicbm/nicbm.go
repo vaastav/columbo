@@ -3,7 +3,6 @@ package nicbm
 import (
 	"context"
 	"errors"
-	"fmt"
 	"regexp"
 	"strconv"
 
@@ -146,7 +145,6 @@ func (p *NicBMParser) parseDMAWriteData(m []string) (*events.Event, error) {
 		return nil, err
 	}
 	e := events.NewEvent(id, events.KNicDmaWDataT, ts, p.Identifier, p.Name, "")
-	fmt.Println(m)
 	e.AddAttribute("data", m[2])
 	return e, nil
 }
