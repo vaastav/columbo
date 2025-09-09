@@ -3,6 +3,7 @@ package nicbm
 import (
 	"context"
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 
@@ -26,7 +27,7 @@ var (
 	reDMAIssue  = regexp.MustCompile(`main_time = (\d+): nicbm: issuing dma op (\S+) addr (0x[0-9a-fA-F]+) len (\d+) pending (\d+)`)
 	reDMAExec   = regexp.MustCompile(`main_time = (\d+): nicbm: executing dma op (\S+) addr (0x[0-9a-fA-F]+) len (\d+) pending (\d+)`)
 	reDMAComp   = regexp.MustCompile(`main_time = (\d+): nicbm: completed dma (read|write) op (\S+) addr (0x[0-9a-fA-F]+) len (\d+)`)
-	reDMAWData  = regexp.MustCompile(`main_time = (\d+): nicbm: dma write data`)
+	reDMAWData  = regexp.MustCompile(`main_time = (\d+): nicbm: dma write data: (.+)`)
 	reEthTx     = regexp.MustCompile(`main_time = (\d+): nicbm: eth tx: len (\d+)`)
 	reEthRx     = regexp.MustCompile(`main_time = (\d+): nicbm: eth rx: port (\d+) len (\d+)`)
 	reMSIIssue  = regexp.MustCompile(`main_time = (\d+): nicbm: issue (MSI(?:-X)?) interrupt vec (\d+)`)
@@ -145,7 +146,8 @@ func (p *NicBMParser) parseDMAWriteData(m []string) (*events.Event, error) {
 		return nil, err
 	}
 	e := events.NewEvent(id, events.KNicDmaWDataT, ts, p.Identifier, p.Name, "")
-	// TODO: Correctly parse the write data once the source is fixed!
+	fmt.Println(m)
+	e.AddAttribute("data", m[2])
 	return e, nil
 }
 

@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/vaastav/columbo_go/events"
 )
 
 var sampleLogFile_ptr *string = flag.String("logfile", "", "Path to log file")
@@ -47,4 +49,13 @@ func TestFile(t *testing.T) {
 		fmt.Println("No log file provided! Skipping!")
 	}
 	// Auto-pass the test if no file is provided
+}
+
+func TestDMAWriteData(t *testing.T) {
+	p, err := NewNicBMParser(context.Background(), 1, "nicbm_parser")
+	require.NoError(t, err)
+
+	event, err := p.ParseEvent("info: main_time = 728327065000: nicbm: dma write data: 03 20 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 00 00 00 01 00 0A 00")
+	assert.Equal(t, event.Type, events.KNicDmaWDataT)
+	assert.Equal(t, "03 20 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 00 00 00 01 00 0A 00", event.Attributes["data"])
 }
