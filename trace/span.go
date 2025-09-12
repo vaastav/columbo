@@ -17,7 +17,7 @@ type ColumboSpan struct {
 	Events     []events.Event
 }
 
-func (c *ColumboSpan) ExportSpan(ctx context.Context, start_time uint64, opts ...trace.SpanStartOption) {
+func (c *ColumboSpan) ExportSpan(ctx context.Context, start_time uint64, opts ...trace.SpanStartOption) context.Context {
 	// Sort all the the events in the span
 	sort.Slice(c.Events, func(i, j int) bool {
 		return c.Events[i].Timestamp < c.Events[j].Timestamp
@@ -43,4 +43,6 @@ func (c *ColumboSpan) ExportSpan(ctx context.Context, start_time uint64, opts ..
 			span.End(trace.WithTimestamp(ts))
 		}
 	}
+	// Return the updated context so we can use that for child spans
+	return ctx
 }
