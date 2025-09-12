@@ -19,7 +19,7 @@ func (ds *DataStream) Push(t *trace.ColumboTrace) {
 	ds.Data <- t
 }
 
-func (ds *DataStream) Pop() *trace.ColumboTrace {
-	t := <-ds.Data
-	return t
+func (ds *DataStream) Close() {
+	// Close our channel
+	close(ds.Data)
 }
