@@ -23,6 +23,7 @@ func NewDiscardSink(ctx context.Context, instream *components.DataStream, id int
 }
 
 func (ds *DiscardSink) Run(ctx context.Context) error {
+	log.Println("[DS-", ds.ID, "]Run function start")
 	for v := range ds.InStream.Data {
 		ds.counter += 1
 		ds.doNothing(v)
@@ -30,6 +31,8 @@ func (ds *DiscardSink) Run(ctx context.Context) error {
 			log.Println("[DS-", ds.ID, "]Processed ", ds.counter, " incoming traces")
 		}
 	}
+
+	log.Println("[DS-", ds.ID, "]Finished processing all events")
 
 	return nil
 }

@@ -58,9 +58,10 @@ func main() {
 
 	var wg sync.WaitGroup
 	// Set up the operator graph for all instances
-	for _, instance := range sim_instances {
+	for instance_name, instance := range sim_instances {
 		// Create and launch a discard sink for each component
 		for _, c := range instance.Components {
+			log.Println("Launching sink for ", instance_name, " with index ", idx)
 			wg.Add(1)
 			ds, err := discard.NewDiscardSink(ctx, c.GetOutDataStream(), idx)
 			if err != nil {
@@ -77,6 +78,7 @@ func main() {
 	// Start the processing
 	for sim_name, reader := range readers {
 		wg.Add(1)
+		log.Println("Launching reader for", sim_name)
 		go func(name string, reader *parser.Reader) {
 			defer wg.Done()
 			instance := sim_instances[sim_name]
@@ -84,6 +86,10 @@ func main() {
 				err := reader.ProcessLog(ctx, instance.Process)
 				if err != nil {
 					log.Fatal(err)
+				}
+				// Close the data streams for the components now!
+				for _, c := range instance.Components {
+					c.GetOutDataStream().Close()
 				}
 			} else {
 				log.Fatalf("No instance found for simulator %s\n", sim_name)
