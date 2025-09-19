@@ -8,9 +8,11 @@ import (
 	"strconv"
 
 	"github.com/vaastav/columbo_go/events"
+	"github.com/vaastav/columbo_go/parser"
 )
 
 type Gem5Parser struct {
+	parser.BaseLogParser
 	Identifier int64
 	Name       string
 	id_cntr    uint64

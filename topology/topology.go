@@ -20,6 +20,7 @@ type System struct {
 
 // Parse a subset of the SimBricks simulator fields
 type Simulator struct {
+	ID         int64  `json:"id"`
 	Name       string `json:"name"`
 	Type       string `json:"type"`
 	Components []int  `json:"components"`

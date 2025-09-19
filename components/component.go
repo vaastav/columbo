@@ -7,7 +7,7 @@ import (
 	"github.com/vaastav/columbo_go/trace"
 )
 
-type component interface {
+type Component interface {
 	GetTracer() *trace.ColumboTracer
 	GetOutDataStream() *DataStream
 	HandleEvent(event events.Event) error

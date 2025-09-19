@@ -1,8 +1,9 @@
 package trace
 
 type ColumboTrace struct {
-	Spans []ColumboSpan
-	Graph map[string][]string // Save the connections between the spans
+	Spans      []ColumboSpan
+	Graph      map[string][]string // Save the connections between the spans
+	Attributes map[string]string
 }
 
 func (ct *ColumboTrace) Export() {

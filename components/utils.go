@@ -17,7 +17,7 @@ func spanFromEvent(tracer *trace.ColumboTracer, event events.Event) trace.Columb
 
 func traceFromEvent(tracer *trace.ColumboTracer, event events.Event) *trace.ColumboTrace {
 	cs := spanFromEvent(tracer, event)
-	ct := &trace.ColumboTrace{Graph: make(map[string][]string)}
+	ct := &trace.ColumboTrace{Graph: make(map[string][]string), Attributes: make(map[string]string)}
 	ct.Spans = append(ct.Spans, cs)
 	ct.Graph[cs.ID] = []string{}
 	return ct
