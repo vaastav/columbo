@@ -1,6 +1,7 @@
 package components
 
 import (
+	"context"
 	"errors"
 
 	"github.com/vaastav/columbo_go/events"
@@ -30,4 +31,11 @@ func (c *baseComponent) GetOutDataStream() *DataStream {
 
 func (c *baseComponent) HandleEvent(event events.Event) error {
 	return errors.New("Base component does not handle any event!")
+}
+
+func (c *baseComponent) Shutdown(ctx context.Context) error {
+	// Close the outgoing stream
+	c.OutStream.Close()
+	// Shutdown the tracer
+	return c.Tracer.Shutdown(ctx)
 }
