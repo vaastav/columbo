@@ -12,10 +12,13 @@ type ColumboTracer struct {
 	base trace.Tracer
 }
 
-func NewColumboTracer(name string) *ColumboTracer {
-	tp := NewTracerProvider(name)
+func NewColumboTracer(name string) (*ColumboTracer, error) {
+	tp, err := NewTracerProvider(name)
+	if err != nil {
+		return nil, err
+	}
 	tracer := tp.Tracer(name)
-	return &ColumboTracer{tp, tracer}
+	return &ColumboTracer{tp, tracer}, err
 }
 
 func (ct *ColumboTracer) Start(ctx context.Context, name string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {

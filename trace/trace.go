@@ -99,7 +99,7 @@ func (ct *ColumboTrace) Export() {
 		}
 
 		// Export span
-		ctx = span.ExportSpan(ctx, uint64(ts.Nanosecond()), opts...)
+		ctx = span.ExportSpan(ctx, ts, opts...)
 
 		contexts[span_id] = ctx
 	}

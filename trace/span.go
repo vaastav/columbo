@@ -17,7 +17,7 @@ type ColumboSpan struct {
 	Events     []events.Event
 }
 
-func (c *ColumboSpan) ExportSpan(ctx context.Context, start_time uint64, opts ...trace.SpanStartOption) context.Context {
+func (c *ColumboSpan) ExportSpan(ctx context.Context, start_time time.Time, opts ...trace.SpanStartOption) context.Context {
 	// Sort all the the events in the span
 	sort.Slice(c.Events, func(i, j int) bool {
 		return c.Events[i].Timestamp < c.Events[j].Timestamp
@@ -25,7 +25,7 @@ func (c *ColumboSpan) ExportSpan(ctx context.Context, start_time uint64, opts ..
 
 	var span trace.Span
 	for idx, e := range c.Events {
-		ts := time.Unix(0, int64(start_time+e.Timestamp))
+		ts := start_time.Add(time.Duration(e.Timestamp) * time.Nanosecond)
 		if idx == 0 {
 			// Start the span
 			ctx, span = c.BaseTracer.Start(ctx, c.Name, append(opts, trace.WithTimestamp(ts))...)
