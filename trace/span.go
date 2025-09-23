@@ -11,6 +11,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+var SCALE_UNIT = time.Nanosecond // Maybe change to time.Microsecond?
+
 type ColumboSpan struct {
 	BaseTracer *ColumboTracer
 	Name       string
@@ -35,7 +37,7 @@ func (c *ColumboSpan) ExportSpan(ctx context.Context, start_time time.Time, opts
 
 	var span trace.Span
 	for idx, e := range c.Events {
-		ts := start_time.Add(time.Duration(e.Timestamp) * time.Nanosecond)
+		ts := start_time.Add(time.Duration(e.Timestamp) * SCALE_UNIT)
 		if idx == 0 {
 			// Start the span
 			ctx, span = c.BaseTracer.Start(ctx, c.Name, append(opts, trace.WithTimestamp(ts))...)
