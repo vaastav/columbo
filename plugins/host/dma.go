@@ -61,3 +61,16 @@ func (p *HostDmaTraceGen) processTrace(t *trace.ColumboTrace) {
 		p.OutStream.Push(t)
 	}
 }
+
+func (p *HostDmaTraceGen) Run(ctx context.Context) error {
+	for {
+		select {
+		case t := <-p.InStream.Data:
+			p.processTrace(t)
+		case <-ctx.Done():
+			log.Println("Context is done. Quitting.")
+			p.OutStream.Close()
+			return nil
+		}
+	}
+}
