@@ -37,7 +37,7 @@ func mergeTraces(t1, t2 *trace.ColumboTrace) *trace.ColumboTrace {
 	t.Type = trace.SPAN
 	t.Attributes["span_type"] = "switch"
 
-	net_span := trace.MergeSpans(t1.Spans[0], t1.Spans[1])
+	net_span := trace.MergeSpans(t1.Spans[0], t1.Spans[0])
 	t.Spans = append(t.Spans, net_span)
 	t.Graph[net_span.ID] = []string{}
 	return t
@@ -47,6 +47,7 @@ func (n *NetworkTraceGen) processTrace(t *trace.ColumboTrace) {
 	// Just push the incomin span and trace types
 	if t.Type == trace.SPAN || t.Type == trace.TRACE {
 		n.OutStream.Push(t)
+		return
 	}
 	// Check if this is an enqueue event
 	event_type := t.Attributes["event_type"]
