@@ -5,6 +5,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/vaastav/columbo_go/events"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -15,6 +16,15 @@ type ColumboSpan struct {
 	Name       string
 	ID         string
 	Events     []events.Event
+}
+
+func MergeSpans(s1, s2 ColumboSpan) ColumboSpan {
+	res := ColumboSpan{}
+	res.BaseTracer = s1.BaseTracer
+	res.Events = append(res.Events, s1.Events...)
+	res.Events = append(res.Events, s2.Events...)
+	res.ID = uuid.New().String()
+	return res
 }
 
 func (c *ColumboSpan) ExportSpan(ctx context.Context, start_time time.Time, opts ...trace.SpanStartOption) context.Context {

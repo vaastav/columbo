@@ -10,6 +10,7 @@ import (
 type ColumboTracer struct {
 	tp   *sdktrace.TracerProvider
 	base trace.Tracer
+	Name string
 }
 
 func NewColumboTracer(name string) (*ColumboTracer, error) {
@@ -18,7 +19,7 @@ func NewColumboTracer(name string) (*ColumboTracer, error) {
 		return nil, err
 	}
 	tracer := tp.Tracer(name)
-	return &ColumboTracer{tp, tracer}, err
+	return &ColumboTracer{tp, tracer, name}, err
 }
 
 func (ct *ColumboTracer) Start(ctx context.Context, name string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {

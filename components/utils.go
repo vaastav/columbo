@@ -20,5 +20,10 @@ func traceFromEvent(tracer *trace.ColumboTracer, event events.Event) *trace.Colu
 	ct := &trace.ColumboTrace{Graph: make(map[string][]string), Attributes: make(map[string]string)}
 	ct.Spans = append(ct.Spans, cs)
 	ct.Graph[cs.ID] = []string{}
+	ct.Type = trace.EVENT
+	for attr, val := range event.Attributes {
+		ct.Attributes[attr] = val
+		ct.Attributes["event_type"] = event.Type.String()
+	}
 	return ct
 }

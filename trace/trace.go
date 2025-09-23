@@ -7,10 +7,19 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+type TraceType int
+
+const (
+	EVENT TraceType = iota
+	SPAN
+	TRACE
+)
+
 type ColumboTrace struct {
 	Spans      []ColumboSpan
 	Graph      map[string][]string // Save the connections between the spans
 	Attributes map[string]string
+	Type       TraceType
 }
 
 func topoSort(graph map[string][]string) ([]string, map[string][]string) {
