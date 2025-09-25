@@ -30,12 +30,32 @@ func NewPacketTx(ctx context.Context, host_stream *components.DataStream, nic_st
 }
 
 func mergeHostTxTrace(t1, t2 *trace.ColumboTrace) {
-	mmio_span := t1.Spans[0].ID
-	dma_span := t2.Spans[0].ID
-	t1.Attributes["span_type"] = "host pkt tx"
-	t1.Spans = append(t1.Spans, t2.Spans...)
-	t1.Attributes["mmio"] = mmio_span
-	t1.Attributes["dma"] = dma_span
+	t1.Spans[0].Events = append(t1.Spans[0].Events, t2.Spans[0].Events...)
+	t1.Type = trace.SPAN
+	t1.Attributes["span_type"] = "host tx"
+}
+
+func mergeHostNicTrace(host_trace, nic_trace *trace.ColumboTrace) *trace.ColumboTrace {
+	new_t := &trace.ColumboTrace{}
+	new_t.Spans = append(new_t.Spans, host_trace.Spans...)
+	new_t.Spans = append(new_t.Spans, nic_trace.Spans...)
+	new_t.Attributes = make(map[string]string)
+	new_t.Type = trace.TRACE
+	new_t.Graph = make(map[string][]string)
+	for k, v := range host_trace.Graph {
+		new_t.Graph[k] = v
+	}
+	for k, v := range nic_trace.Graph {
+		new_t.Graph[k] = v
+	}
+	if v, ok := new_t.Graph[host_trace.Spans[0].ID]; !ok {
+		new_t.Graph[host_trace.Spans[0].ID] = []string{nic_trace.Spans[0].ID}
+	} else {
+		new_t.Graph[host_trace.Spans[0].ID] = append(v, nic_trace.Spans[0].ID)
+	}
+	new_t.Attributes["trace_type"] = "host+nic tx"
+
+	return new_t
 }
 
 func (p *PacketTx) processHostTrace(t *trace.ColumboTrace) {
@@ -49,20 +69,25 @@ func (p *PacketTx) processHostTrace(t *trace.ColumboTrace) {
 	} else if span_type == "host dma read" {
 		// Then we would get host dma
 		mergeHostTxTrace(p.hostTrace, t)
+		new_t := mergeHostNicTrace(p.hostTrace, p.nicTrace)
+		p.OutStream.Push(new_t)
+		p.hostTrace = nil
+		p.nicTrace = nil
 	} else {
 		p.OutStream.Push(t)
 	}
 }
 
 func (p *PacketTx) processNicTrace(t *trace.ColumboTrace) {
-	if t.Type == trace.TRACE || t.Type == trace.EVENT {
+	if t.Type == trace.EVENT || t.Type == trace.SPAN {
 		p.OutStream.Push(t)
 	}
-	if t.Type == trace.SPAN {
-		// We should get a nic mmio read
-		span_type := t.Attributes["span_type"]
-		if span_type == "nic tx" {
+	if t.Type == trace.TRACE {
+		trace_type := t.Attributes["trace_type"]
+		if trace_type == "nic tx" {
 			p.nicTrace = t
+		} else {
+			p.OutStream.Push(t)
 		}
 	}
 }

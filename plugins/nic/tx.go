@@ -39,6 +39,7 @@ func addEthTxEvent(t, eth_tx *trace.ColumboTrace) {
 func addDMASpanToTxTrace(t, dma *trace.ColumboTrace) {
 	t.Spans = append(t.Spans, dma.Spans...)
 	t.Graph[t.Spans[0].ID] = append(t.Graph[t.Spans[0].ID], dma.Spans[0].ID)
+	t.Graph[dma.Spans[0].ID] = []string{}
 }
 
 func (p *NicTx) processTrace(t *trace.ColumboTrace) {
