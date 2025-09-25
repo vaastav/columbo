@@ -12,6 +12,7 @@ type Component interface {
 	GetTracer() *trace.ColumboTracer
 	GetOutDataStream() *DataStream
 	HandleEvent(event events.Event) error
+	Shutdown(ctx context.Context) error
 }
 
 type baseComponent struct {
