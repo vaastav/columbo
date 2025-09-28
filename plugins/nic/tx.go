@@ -2,6 +2,7 @@ package nic
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/vaastav/columbo_go/components"
@@ -10,21 +11,21 @@ import (
 )
 
 type NicTx struct {
-	InStream   *components.DataStream
-	OutStream  *components.DataStream
+	*components.BasePlugin
+	InStream   components.Plugin
 	pending_tx *trace.ColumboTrace
 }
 
-func NewNicTx(ctx context.Context, ins *components.DataStream, buffer_size int) (*NicTx, error) {
+func NewNicTx(ctx context.Context, ins components.Plugin, buffer_size int, ID int) (*NicTx, error) {
 	outs, err := components.NewDataStream(ctx, make(chan *trace.ColumboTrace, buffer_size))
 	if err != nil {
 		return nil, err
 	}
 
 	tx := &NicTx{
-		InStream:   ins,
-		OutStream:  outs,
-		pending_tx: nil,
+		components.NewBasePlugin(ID, outs),
+		ins,
+		nil,
 	}
 	return tx, nil
 }
@@ -77,13 +78,21 @@ func (p *NicTx) processTrace(t *trace.ColumboTrace) {
 }
 
 func (p *NicTx) Run(ctx context.Context) error {
+	ins := p.InStream.GetOutDataStream()
+	if ins == nil {
+		return errors.New("Outdatastream of incoming plugin is nil")
+	}
 	for {
 		select {
-		case t := <-p.InStream.Data:
+		case t := <-ins.Data:
 			p.processTrace(t)
 		case <-ctx.Done():
 			p.OutStream.Close()
 			return nil
 		}
 	}
+}
+
+func (p *NicTx) IncomingPlugins() []components.Plugin {
+	return []components.Plugin{p.InStream}
 }

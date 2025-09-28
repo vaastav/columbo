@@ -2,6 +2,7 @@ package filter
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/vaastav/columbo_go/components"
@@ -9,30 +10,35 @@ import (
 )
 
 type Filter struct {
-	Op        func(t *trace.ColumboTrace) bool
-	InStream  *components.DataStream
-	OutStream *components.DataStream
+	*components.BasePlugin
+	Op       func(t *trace.ColumboTrace) bool
+	InStream components.Plugin
 }
 
-func NewFilter(ctx context.Context, Op func(t *trace.ColumboTrace) bool, ins *components.DataStream, buffer_size int) (*Filter, error) {
+func NewFilter(ctx context.Context, Op func(t *trace.ColumboTrace) bool, ins components.Plugin, buffer_size int, ID int) (*Filter, error) {
 	outs, err := components.NewDataStream(ctx, make(chan *trace.ColumboTrace, buffer_size))
 	if err != nil {
 		return nil, err
 	}
 
 	f := &Filter{
-		Op:        Op,
-		InStream:  ins,
-		OutStream: outs,
+		components.NewBasePlugin(ID, outs),
+		Op,
+		ins,
 	}
+	f.OutStream = outs
 
 	return f, nil
 }
 
 func (f *Filter) Run(ctx context.Context) error {
+	ds := f.InStream.GetOutDataStream()
+	if ds == nil {
+		return errors.New("Outdatastream of incoming plugin is nil")
+	}
 	for {
 		select {
-		case t := <-f.InStream.Data:
+		case t := <-ds.Data:
 			if f.Op(t) {
 				f.OutStream.Push(t)
 			}
@@ -42,4 +48,8 @@ func (f *Filter) Run(ctx context.Context) error {
 			return nil
 		}
 	}
+}
+
+func (f *Filter) IncomingPlugins() []components.Plugin {
+	return []components.Plugin{f.InStream}
 }

@@ -2,6 +2,7 @@ package host
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/vaastav/columbo_go/components"
@@ -10,23 +11,23 @@ import (
 )
 
 type HostDmaTraceGen struct {
-	InStream       *components.DataStream
-	OutStream      *components.DataStream
+	*components.BasePlugin
+	InStream       components.Plugin
 	pending_reads  map[string]*trace.ColumboTrace
 	pending_writes map[string]*trace.ColumboTrace
 }
 
-func NewHostDmaTraceGen(ctx context.Context, ins *components.DataStream, buffer_size int) (*HostDmaTraceGen, error) {
+func NewHostDmaTraceGen(ctx context.Context, ins components.Plugin, buffer_size int, ID int) (*HostDmaTraceGen, error) {
 	outs, err := components.NewDataStream(ctx, make(chan *trace.ColumboTrace, buffer_size))
 	if err != nil {
 		return nil, err
 	}
 
 	tg := &HostDmaTraceGen{
-		InStream:       ins,
-		OutStream:      outs,
-		pending_reads:  make(map[string]*trace.ColumboTrace),
-		pending_writes: make(map[string]*trace.ColumboTrace),
+		components.NewBasePlugin(ID, outs),
+		ins,
+		make(map[string]*trace.ColumboTrace),
+		make(map[string]*trace.ColumboTrace),
 	}
 
 	return tg, nil
@@ -63,9 +64,13 @@ func (p *HostDmaTraceGen) processTrace(t *trace.ColumboTrace) {
 }
 
 func (p *HostDmaTraceGen) Run(ctx context.Context) error {
+	instream := p.InStream.GetOutDataStream()
+	if instream == nil {
+		return errors.New("Incoming plugin has a nil stream")
+	}
 	for {
 		select {
-		case t := <-p.InStream.Data:
+		case t := <-instream.Data:
 			p.processTrace(t)
 		case <-ctx.Done():
 			log.Println("Context is done. Quitting.")
@@ -73,4 +78,8 @@ func (p *HostDmaTraceGen) Run(ctx context.Context) error {
 			return nil
 		}
 	}
+}
+
+func (p *HostDmaTraceGen) IncomingPlugins() []components.Plugin {
+	return []components.Plugin{p.InStream}
 }

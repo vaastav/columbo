@@ -2,6 +2,7 @@ package network
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/vaastav/columbo_go/components"
@@ -10,21 +11,21 @@ import (
 )
 
 type NetworkTraceGen struct {
-	InStream  *components.DataStream
-	OutStream *components.DataStream
-	pending   map[string]*trace.ColumboTrace
+	*components.BasePlugin
+	InStream components.Plugin
+	pending  map[string]*trace.ColumboTrace
 }
 
-func NewNetworkTraceGen(ctx context.Context, ins *components.DataStream, buffer_size int) (*NetworkTraceGen, error) {
+func NewNetworkTraceGen(ctx context.Context, ins components.Plugin, buffer_size int, ID int) (*NetworkTraceGen, error) {
 	outs, err := components.NewDataStream(ctx, make(chan *trace.ColumboTrace, buffer_size))
 	if err != nil {
 		return nil, err
 	}
 
 	nt := &NetworkTraceGen{
-		InStream:  ins,
-		OutStream: outs,
-		pending:   make(map[string]*trace.ColumboTrace),
+		components.NewBasePlugin(ID, outs),
+		ins,
+		make(map[string]*trace.ColumboTrace),
 	}
 
 	return nt, nil
@@ -68,9 +69,13 @@ func (n *NetworkTraceGen) processTrace(t *trace.ColumboTrace) {
 }
 
 func (n *NetworkTraceGen) Run(ctx context.Context) error {
+	ins := n.InStream.GetOutDataStream()
+	if ins == nil {
+		return errors.New("Outdatastream of incoming plugin is nil")
+	}
 	for {
 		select {
-		case t := <-n.InStream.Data:
+		case t := <-ins.Data:
 			n.processTrace(t)
 		case <-ctx.Done():
 			log.Println("Context is done. Quitting.")
@@ -78,4 +83,8 @@ func (n *NetworkTraceGen) Run(ctx context.Context) error {
 			return nil
 		}
 	}
+}
+
+func (n *NetworkTraceGen) IncomingPlugins() []components.Plugin {
+	return []components.Plugin{n.InStream}
 }

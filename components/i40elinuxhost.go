@@ -22,10 +22,9 @@ func NewHost(ctx context.Context, Name string, ID int, buffer_size int) (*Host, 
 	}
 	host_comp := &Host{
 		&baseComponent{
-			Tracer:    t,
-			Name:      Name,
-			ID:        ID,
-			OutStream: outs,
+			NewBasePlugin(ID, outs),
+			t,
+			Name,
 		},
 	}
 	return host_comp, nil

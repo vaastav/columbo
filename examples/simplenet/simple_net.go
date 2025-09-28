@@ -6,7 +6,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/vaastav/columbo_go/parser"
+	"github.com/vaastav/columbo_go/components"
 	"github.com/vaastav/columbo_go/plugins/discard"
 	"github.com/vaastav/columbo_go/symphony"
 	"github.com/vaastav/columbo_go/topology"
@@ -41,7 +41,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// Create readers and set up the simulator instances
 	readers, err := symphony.CreateReaders(ctx, lm)
@@ -57,40 +58,29 @@ func main() {
 	idx := 0
 
 	var wg sync.WaitGroup
+	var sinks []components.Plugin
 	// Set up the operator graph for all instances
 	for _, instance := range sim_instances {
 		// Create and launch a discard sink for each component
 		for _, c := range instance.Components {
-			wg.Add(1)
-			ds, err := discard.NewDiscardSink(ctx, c.GetOutDataStream(), idx)
+			ds, err := discard.NewDiscardSink(ctx, c, idx)
 			if err != nil {
 				log.Fatal(err)
 			}
-			go func(ds *discard.DiscardSink) {
-				defer wg.Done()
-				ds.Run(ctx)
-			}(ds)
 			idx += 1
+			sinks = append(sinks, ds)
 		}
 	}
 
-	// Start the processing
-	for sim_name, reader := range readers {
-		wg.Add(1)
-		go func(name string, reader *parser.Reader) {
-			defer wg.Done()
-			instance := sim_instances[sim_name]
-			if instance != nil {
-				err := reader.ProcessLog(ctx, instance.Process)
-				if err != nil {
-					log.Fatal(err)
-				}
-			} else {
-				log.Fatalf("No instance found for simulator %s\n", sim_name)
-			}
-		}(sim_name, reader)
-	}
+	// Launch the OpGraph
+	symphony.LauncOpGraph(ctx, &wg, sinks)
 
+	// Launch the readers
+	err = symphony.StartProcessing(readers, sim_instances)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Wait for the operator graph to finish
 	wg.Wait()
 	log.Println("Finished processing all traces")
 }

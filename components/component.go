@@ -3,23 +3,22 @@ package components
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"github.com/vaastav/columbo_go/events"
 	"github.com/vaastav/columbo_go/trace"
 )
 
 type Component interface {
+	Plugin
 	GetTracer() *trace.ColumboTracer
-	GetOutDataStream() *DataStream
 	HandleEvent(event events.Event) error
-	Shutdown(ctx context.Context) error
 }
 
 type baseComponent struct {
-	Tracer    *trace.ColumboTracer
-	Name      string
-	ID        int
-	OutStream *DataStream
+	*BasePlugin
+	Tracer *trace.ColumboTracer
+	Name   string
 }
 
 func (c *baseComponent) GetTracer() *trace.ColumboTracer {
@@ -39,4 +38,9 @@ func (c *baseComponent) Shutdown(ctx context.Context) error {
 	c.OutStream.Close()
 	// Shutdown the tracer
 	return c.Tracer.Shutdown(ctx)
+}
+
+func (c *baseComponent) Launch(ctx context.Context, wg *sync.WaitGroup) {
+	// Don't really need to do much here other than setting the Running flag
+	c.Running = true
 }

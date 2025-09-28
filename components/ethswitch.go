@@ -22,10 +22,9 @@ func NewSwitch(ctx context.Context, Name string, ID int, buffer_size int) (*Swit
 	}
 	switch_comp := &Switch{
 		&baseComponent{
-			Tracer:    t,
-			Name:      Name,
-			ID:        ID,
-			OutStream: outs,
+			NewBasePlugin(ID, outs),
+			t,
+			Name,
 		},
 	}
 	return switch_comp, nil

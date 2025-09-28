@@ -2,6 +2,7 @@ package nic
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/vaastav/columbo_go/components"
@@ -10,23 +11,23 @@ import (
 )
 
 type NicDMATraceGen struct {
-	InStream          *components.DataStream
-	OutStream         *components.DataStream
+	*components.BasePlugin
+	InStream          components.Plugin
 	pending_read_dma  *trace.ColumboTrace
 	pending_write_dma *trace.ColumboTrace
 }
 
-func NewNicDmaTraceGen(ctx context.Context, ins *components.DataStream, buffer_size int) (*NicDMATraceGen, error) {
+func NewNicDmaTraceGen(ctx context.Context, ins components.Plugin, buffer_size int, ID int) (*NicDMATraceGen, error) {
 	outs, err := components.NewDataStream(ctx, make(chan *trace.ColumboTrace, buffer_size))
 	if err != nil {
 		return nil, err
 	}
 
 	tg := &NicDMATraceGen{
-		InStream:          ins,
-		OutStream:         outs,
-		pending_read_dma:  nil,
-		pending_write_dma: nil,
+		components.NewBasePlugin(ID, outs),
+		ins,
+		nil,
+		nil,
 	}
 	return tg, nil
 }
@@ -83,9 +84,13 @@ func (p *NicDMATraceGen) processTrace(t *trace.ColumboTrace) {
 }
 
 func (p *NicDMATraceGen) Run(ctx context.Context) error {
+	ins := p.InStream.GetOutDataStream()
+	if ins == nil {
+		return errors.New("Outdatastream of incoming plugin is nil")
+	}
 	for {
 		select {
-		case t := <-p.InStream.Data:
+		case t := <-ins.Data:
 			p.processTrace(t)
 		case <-ctx.Done():
 			log.Println("Context is done. Quitting")
@@ -93,4 +98,8 @@ func (p *NicDMATraceGen) Run(ctx context.Context) error {
 			return nil
 		}
 	}
+}
+
+func (p *NicDMATraceGen) IncomingPlugins() []components.Plugin {
+	return []components.Plugin{p.InStream}
 }

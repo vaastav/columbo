@@ -2,6 +2,7 @@ package host
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/vaastav/columbo_go/components"
@@ -10,25 +11,25 @@ import (
 )
 
 type HostMmioTraceGen struct {
-	InStream              *components.DataStream
-	OutStream             *components.DataStream
+	*components.BasePlugin
+	InStream              components.Plugin
 	pending_reads         map[string]*trace.ColumboTrace
 	pending_writes        map[string]*trace.ColumboTrace
 	pending_posted_writes map[string]*trace.ColumboTrace
 }
 
-func NewHostMmioTraceGen(ctx context.Context, ins *components.DataStream, buffer_size int) (*HostMmioTraceGen, error) {
+func NewHostMmioTraceGen(ctx context.Context, ins components.Plugin, buffer_size int, ID int) (*HostMmioTraceGen, error) {
 	outs, err := components.NewDataStream(ctx, make(chan *trace.ColumboTrace, buffer_size))
 	if err != nil {
 		return nil, err
 	}
 
 	tg := &HostMmioTraceGen{
-		InStream:              ins,
-		OutStream:             outs,
-		pending_reads:         make(map[string]*trace.ColumboTrace),
-		pending_writes:        make(map[string]*trace.ColumboTrace),
-		pending_posted_writes: make(map[string]*trace.ColumboTrace),
+		components.NewBasePlugin(ID, outs),
+		ins,
+		make(map[string]*trace.ColumboTrace),
+		make(map[string]*trace.ColumboTrace),
+		make(map[string]*trace.ColumboTrace),
 	}
 
 	return tg, nil
@@ -87,9 +88,13 @@ func (p *HostMmioTraceGen) processTrace(t *trace.ColumboTrace) {
 }
 
 func (p *HostMmioTraceGen) Run(ctx context.Context) error {
+	ins := p.InStream.GetOutDataStream()
+	if ins == nil {
+		return errors.New("Outdatastream of incoming plugin is nil")
+	}
 	for {
 		select {
-		case t := <-p.InStream.Data:
+		case t := <-ins.Data:
 			p.processTrace(t)
 		case <-ctx.Done():
 			log.Println("Context is done. Quitting.")
@@ -97,4 +102,8 @@ func (p *HostMmioTraceGen) Run(ctx context.Context) error {
 			return nil
 		}
 	}
+}
+
+func (p *HostMmioTraceGen) IncomingPlugins() []components.Plugin {
+	return []components.Plugin{p.InStream}
 }
