@@ -23,6 +23,15 @@ func main() {
 	sim_instances := simulation.Instances
 	idx := 0
 
+	pairs, err := symphony.HostNicPairs(simulation)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Number of pairs", len(pairs))
+	for _, p := range pairs {
+		log.Println(p.Host.GetName(), p.NIC.GetName())
+	}
+
 	var wg sync.WaitGroup
 	var sinks []components.Plugin
 	for _, instance := range sim_instances {

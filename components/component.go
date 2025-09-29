@@ -14,6 +14,7 @@ type Component interface {
 	GetTracer() *trace.ColumboTracer
 	HandleEvent(event events.Event) error
 	Stop()
+	GetName() string
 }
 
 type baseComponent struct {
@@ -30,6 +31,10 @@ func newBaseComponent(ID int, outs *DataStream, t *trace.ColumboTracer, Name str
 		Name,
 		make(chan bool),
 	}
+}
+
+func (c *baseComponent) GetName() string {
+	return c.Name
 }
 
 func (c *baseComponent) GetTracer() *trace.ColumboTracer {

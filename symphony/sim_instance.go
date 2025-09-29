@@ -15,8 +15,10 @@ import (
 )
 
 type Simulation struct {
-	Instances map[string]*SimInstance
-	Channels  map[int]*ChannelInstance
+	Instances  map[string]*SimInstance
+	Channels   map[int]*ChannelInstance
+	Components map[int]components.Component
+	Ifaces     map[int]*topology.Iface
 }
 
 type ChannelInstance struct {
@@ -92,6 +94,7 @@ func CreateSimInstanceFromTopology(ctx context.Context, topo *topology.Topology,
 		chanInst.IfaceA = ifaces[channel.IfaceA]
 		chanInst.IfaceB = ifaces[channel.IfaceB]
 		chanInst.ChanData = &channel
+		channels[channel.ID] = chanInst
 	}
 
 	for _, sim := range topo.Sim.Simulators {
@@ -128,6 +131,8 @@ func CreateSimInstanceFromTopology(ctx context.Context, topo *topology.Topology,
 	simulation := &Simulation{}
 	simulation.Instances = instances
 	simulation.Channels = channels
+	simulation.Components = component_map
+	simulation.Ifaces = ifaces
 
 	return simulation, nil
 }
