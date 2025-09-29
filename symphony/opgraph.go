@@ -55,7 +55,7 @@ func LauncOpGraph(ctx context.Context, wg *sync.WaitGroup, sinks []components.Pl
 	}
 }
 
-func Initialize(ctx context.Context, lm *topology.LogMapping, topo *topology.Topology, buffer_size int) (map[string]*parser.Reader, map[string]*SimInstance, error) {
+func Initialize(ctx context.Context, lm *topology.LogMapping, topo *topology.Topology, buffer_size int) (map[string]*parser.Reader, *Simulation, error) {
 	readers, err := CreateReaders(ctx, lm)
 	if err != nil {
 		return nil, nil, err
@@ -67,7 +67,7 @@ func Initialize(ctx context.Context, lm *topology.LogMapping, topo *topology.Top
 	return readers, sim_instances, nil
 }
 
-func InitializeFromFile(ctx context.Context, buffer_size int) (map[string]*parser.Reader, map[string]*SimInstance, error) {
+func InitializeFromFile(ctx context.Context, buffer_size int) (map[string]*parser.Reader, *Simulation, error) {
 
 	flag.Parse()
 	if *topology_file == "" {

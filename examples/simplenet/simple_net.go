@@ -19,7 +19,9 @@ func main() {
 	defer cancel()
 
 	// Create readers and set up the simulator instances
-	readers, sim_instances, err := symphony.InitializeFromFile(ctx, BUFFER_SIZE)
+	readers, simulation, err := symphony.InitializeFromFile(ctx, BUFFER_SIZE)
+
+	sim_instances := simulation.Instances
 
 	idx := 0
 

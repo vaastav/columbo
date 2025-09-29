@@ -14,6 +14,17 @@ import (
 	"github.com/vaastav/columbo_go/topology"
 )
 
+type Simulation struct {
+	Instances map[string]*SimInstance
+	Channels  map[int]*ChannelInstance
+}
+
+type ChannelInstance struct {
+	IfaceA   *topology.Iface
+	IfaceB   *topology.Iface
+	ChanData *topology.Channel
+}
+
 type SimInstance struct {
 	ID         int64
 	P          parser.Parser
@@ -47,7 +58,7 @@ func (s *SimInstance) Shutdown() {
 	}
 }
 
-func CreateSimInstanceFromTopology(ctx context.Context, topo *topology.Topology, BUFFER_SIZE int) (map[string]*SimInstance, error) {
+func CreateSimInstanceFromTopology(ctx context.Context, topo *topology.Topology, BUFFER_SIZE int) (*Simulation, error) {
 	instances := make(map[string]*SimInstance)
 	component_map := make(map[int]components.Component)
 	for _, cmp := range topo.Sys.Components {
@@ -69,6 +80,20 @@ func CreateSimInstanceFromTopology(ctx context.Context, topo *topology.Topology,
 		}
 		component_map[cmp.ID] = comp
 	}
+
+	ifaces := make(map[int]*topology.Iface)
+	for _, iface := range topo.Sys.Interfaces {
+		ifaces[iface.ID] = &iface
+	}
+
+	channels := make(map[int]*ChannelInstance)
+	for _, channel := range topo.Sys.Channels {
+		chanInst := &ChannelInstance{}
+		chanInst.IfaceA = ifaces[channel.IfaceA]
+		chanInst.IfaceB = ifaces[channel.IfaceB]
+		chanInst.ChanData = &channel
+	}
+
 	for _, sim := range topo.Sim.Simulators {
 		var components []components.Component
 		for _, cmp_id := range sim.Components {
@@ -100,5 +125,9 @@ func CreateSimInstanceFromTopology(ctx context.Context, topo *topology.Topology,
 		instances[sim.Name] = instance
 	}
 
-	return instances, nil
+	simulation := &Simulation{}
+	simulation.Instances = instances
+	simulation.Channels = channels
+
+	return simulation, nil
 }

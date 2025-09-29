@@ -18,8 +18,9 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	readers, sim_instances, err := symphony.InitializeFromFile(ctx, BUFFER_SIZE)
+	readers, simulation, err := symphony.InitializeFromFile(ctx, BUFFER_SIZE)
 
+	sim_instances := simulation.Instances
 	idx := 0
 
 	var wg sync.WaitGroup
