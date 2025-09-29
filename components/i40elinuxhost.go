@@ -21,11 +21,7 @@ func NewHost(ctx context.Context, Name string, ID int, buffer_size int) (*Host, 
 		return nil, err
 	}
 	host_comp := &Host{
-		&baseComponent{
-			NewBasePlugin(ID, outs),
-			t,
-			Name,
-		},
+		newBaseComponent(ID, outs, t, Name),
 	}
 	return host_comp, nil
 }

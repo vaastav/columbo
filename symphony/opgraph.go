@@ -21,6 +21,7 @@ func StartProcessing(readers map[string]*parser.Reader, sim_instances map[string
 	// Start the processing
 	for sim_name, reader := range readers {
 		wg.Add(1)
+		log.Println("Adding a wait element")
 		instance := sim_instances[sim_name]
 		if instance == nil {
 			return fmt.Errorf("No simulator instance found for the reader", sim_name)
@@ -31,11 +32,19 @@ func StartProcessing(readers map[string]*parser.Reader, sim_instances map[string
 			if err != nil {
 				log.Fatal(err)
 			}
+			log.Println("Stopping reader for ", sim_name)
 		}(sim_name, reader, instance)
 	}
 
 	// Wait for all parsers to finish
 	wg.Wait()
+
+	for _, sim := range sim_instances {
+		for _, c := range sim.Components {
+			c.Stop()
+			c.GetOutDataStream().Close()
+		}
+	}
 
 	return nil
 }

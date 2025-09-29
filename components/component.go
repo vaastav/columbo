@@ -13,12 +13,23 @@ type Component interface {
 	Plugin
 	GetTracer() *trace.ColumboTracer
 	HandleEvent(event events.Event) error
+	Stop()
 }
 
 type baseComponent struct {
 	*BasePlugin
 	Tracer *trace.ColumboTracer
 	Name   string
+	stop   chan bool
+}
+
+func newBaseComponent(ID int, outs *DataStream, t *trace.ColumboTracer, Name string) *baseComponent {
+	return &baseComponent{
+		NewBasePlugin(ID, outs),
+		t,
+		Name,
+		make(chan bool),
+	}
 }
 
 func (c *baseComponent) GetTracer() *trace.ColumboTracer {
@@ -43,4 +54,17 @@ func (c *baseComponent) Shutdown(ctx context.Context) error {
 func (c *baseComponent) Launch(ctx context.Context, wg *sync.WaitGroup) {
 	// Don't really need to do much here other than setting the Running flag
 	c.Running = true
+}
+
+func (c *baseComponent) Stop() {
+	c.stop <- true
+}
+
+func (c *baseComponent) Run(ctx context.Context) error {
+	select {
+	case <-c.stop:
+		return nil
+	case <-ctx.Done():
+		return nil
+	}
 }

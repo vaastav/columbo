@@ -21,11 +21,7 @@ func NewNIC(ctx context.Context, Name string, ID int, buffer_size int) (*NIC, er
 		return nil, err
 	}
 	NIC_comp := &NIC{
-		&baseComponent{
-			NewBasePlugin(ID, outs),
-			t,
-			Name,
-		},
+		newBaseComponent(ID, outs, t, Name),
 	}
 	return NIC_comp, nil
 }

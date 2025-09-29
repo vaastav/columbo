@@ -39,6 +39,14 @@ func (s *SimInstance) Process(ctx context.Context, line string) error {
 	}
 	return nil
 }
+
+func (s *SimInstance) Shutdown() {
+	for _, c := range s.Components {
+		log.Println("Shutting down component")
+		c.GetOutDataStream().Close()
+	}
+}
+
 func CreateSimInstanceFromTopology(ctx context.Context, topo *topology.Topology, BUFFER_SIZE int) (map[string]*SimInstance, error) {
 	instances := make(map[string]*SimInstance)
 	component_map := make(map[int]components.Component)

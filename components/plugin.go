@@ -14,6 +14,7 @@ type Plugin interface {
 	IncomingPlugins() []Plugin
 	IsLaunched() bool
 	SetRunning(status bool)
+	GetID() int
 }
 
 type BasePlugin struct {
@@ -24,6 +25,10 @@ type BasePlugin struct {
 
 func (bp *BasePlugin) IsLaunched() bool {
 	return bp.Running
+}
+
+func (bp *BasePlugin) GetID() int {
+	return bp.ID
 }
 
 func (bp *BasePlugin) GetOutDataStream() *DataStream {
@@ -57,6 +62,7 @@ func LaunchPlugin(ctx context.Context, wg *sync.WaitGroup, bp Plugin) {
 	for _, incoming := range bp.IncomingPlugins() {
 		LaunchPlugin(ctx, wg, incoming)
 	}
+	log.Println("Adding a wait element")
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -64,6 +70,7 @@ func LaunchPlugin(ctx context.Context, wg *sync.WaitGroup, bp Plugin) {
 		if err != nil {
 			log.Println(err)
 		}
+		log.Println("Stopping plugin ", bp.GetID())
 	}()
 	bp.SetRunning(true)
 }
