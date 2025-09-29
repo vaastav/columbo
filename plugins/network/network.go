@@ -10,6 +10,8 @@ import (
 	"github.com/vaastav/columbo_go/trace"
 )
 
+var cntr int
+
 type NetworkTraceGen struct {
 	*components.BasePlugin
 	InStream components.Plugin

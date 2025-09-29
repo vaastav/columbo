@@ -7,6 +7,7 @@ import (
 
 	"github.com/vaastav/columbo_go/components"
 	"github.com/vaastav/columbo_go/plugins/discard"
+	"github.com/vaastav/columbo_go/plugins/network"
 	"github.com/vaastav/columbo_go/symphony"
 )
 
@@ -21,29 +22,43 @@ func main() {
 	readers, simulation, err := symphony.InitializeFromFile(ctx, BUFFER_SIZE)
 
 	sim_instances := simulation.Instances
-	idx := 0
+	id := 0
 
+	var wg sync.WaitGroup
+	var sinks []components.Plugin
 	pairs, err := symphony.HostNicPairs(simulation)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Number of pairs", len(pairs))
-	for _, p := range pairs {
-		log.Println(p.Host.GetName(), p.NIC.GetName())
+	switches, err := symphony.Switches(simulation)
+	if err != nil {
+		log.Fatal(err)
 	}
-
-	var wg sync.WaitGroup
-	var sinks []components.Plugin
-	for _, instance := range sim_instances {
-		for _, c := range instance.Components {
-			ds, err := discard.NewDiscardSink(ctx, c, idx)
-			if err != nil {
-				log.Fatal(err)
-			}
-			idx += 1
-			sinks = append(sinks, ds)
+	log.Println("Number of switches", len(switches))
+	for _, sw := range switches {
+		ntgen, err := network.NewNetworkTraceGen(ctx, sw, BUFFER_SIZE, id)
+		if err != nil {
+			log.Fatal(err)
 		}
+		id++
+		ds, err := discard.NewDiscardSink(ctx, ntgen, id)
+		if err != nil {
+			log.Fatal(err)
+		}
+		id++
+		sinks = append(sinks, ds)
 	}
+	switchpairs, err := symphony.SwitchPairs(simulation)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Number of switch-switch pairs", len(switchpairs))
+	switchnicpairs, err := symphony.NicSwitchPairs(simulation)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Number of nic-switch pairs", len(switchnicpairs))
 
 	symphony.LauncOpGraph(ctx, &wg, sinks)
 
