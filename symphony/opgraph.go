@@ -42,7 +42,7 @@ func StartProcessing(readers map[string]*parser.Reader, sim_instances map[string
 
 func LauncOpGraph(ctx context.Context, wg *sync.WaitGroup, sinks []components.Plugin) {
 	for _, sink := range sinks {
-		sink.Launch(ctx, wg)
+		components.LaunchPlugin(ctx, wg, sink)
 	}
 }
 

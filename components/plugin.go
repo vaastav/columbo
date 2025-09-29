@@ -2,7 +2,7 @@ package components
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"log"
 	"sync"
 )
@@ -12,8 +12,8 @@ type Plugin interface {
 	Shutdown(ctx context.Context) error
 	Run(ctx context.Context) error
 	IncomingPlugins() []Plugin
-	Launch(ctx context.Context, wg *sync.WaitGroup)
 	IsLaunched() bool
+	SetRunning(status bool)
 }
 
 type BasePlugin struct {
@@ -33,21 +33,29 @@ func (bp *BasePlugin) GetOutDataStream() *DataStream {
 func (bp *BasePlugin) Shutdown(context.Context) error { return nil }
 
 func (bp *BasePlugin) Run(ctx context.Context) error {
-	return errors.New("Run function is not implemented for the Base plugin")
+	return fmt.Errorf("Run function is not implemented for the Base plugin %d", bp.ID)
 }
 
 func (bp *BasePlugin) IncomingPlugins() []Plugin {
 	return []Plugin{}
 }
 
-func (bp *BasePlugin) Launch(ctx context.Context, wg *sync.WaitGroup) {
-	if bp.Running {
+func (bp *BasePlugin) SetRunning(status bool) {
+	bp.Running = status
+}
+
+func NewBasePlugin(ID int, outs *DataStream) *BasePlugin {
+	return &BasePlugin{ID: ID, OutStream: outs, Running: false}
+}
+
+func LaunchPlugin(ctx context.Context, wg *sync.WaitGroup, bp Plugin) {
+	if bp.IsLaunched() {
 		// We have already launched this plugin and its incoming plugins!
 		return
 	}
 	// Launch all parent plugins
 	for _, incoming := range bp.IncomingPlugins() {
-		incoming.Launch(ctx, wg)
+		LaunchPlugin(ctx, wg, incoming)
 	}
 	wg.Add(1)
 	go func() {
@@ -57,9 +65,5 @@ func (bp *BasePlugin) Launch(ctx context.Context, wg *sync.WaitGroup) {
 			log.Println(err)
 		}
 	}()
-	bp.Running = true
-}
-
-func NewBasePlugin(ID int, outs *DataStream) *BasePlugin {
-	return &BasePlugin{ID: ID, OutStream: outs, Running: false}
+	bp.SetRunning(true)
 }
