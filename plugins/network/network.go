@@ -77,7 +77,12 @@ func (n *NetworkTraceGen) Run(ctx context.Context) error {
 	}
 	for {
 		select {
-		case t := <-ins.Data:
+		case t, ok := <-ins.Data:
+			if !ok {
+				// Channel is closed so we can be done too
+				n.OutStream.Close()
+				return nil
+			}
 			n.processTrace(t)
 		case <-ctx.Done():
 			log.Println("Context is done. Quitting.")

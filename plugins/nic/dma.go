@@ -39,6 +39,13 @@ func mergeTraces(t1, t2 *trace.ColumboTrace, span_type string) *trace.ColumboTra
 	t.Type = trace.SPAN
 	t.Attributes["span_type"] = span_type
 
+	if t1 == nil {
+		log.Println("DMA: t1 is nil")
+	}
+	if t2 == nil {
+		log.Println("DMA: t2 is nil")
+	}
+
 	span := trace.MergeSpans(t1.Spans[0], t2.Spans[0])
 	t.Spans = append(t.Spans, span)
 	t.Graph[span.ID] = []string{}
@@ -90,7 +97,12 @@ func (p *NicDMATraceGen) Run(ctx context.Context) error {
 	}
 	for {
 		select {
-		case t := <-ins.Data:
+		case t, ok := <-ins.Data:
+			if !ok {
+				// Channel is closed so we can close too
+				p.OutStream.Close()
+				return nil
+			}
 			p.processTrace(t)
 		case <-ctx.Done():
 			log.Println("Context is done. Quitting")

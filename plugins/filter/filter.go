@@ -15,7 +15,7 @@ type Filter struct {
 	InStream components.Plugin
 }
 
-func NewFilter(ctx context.Context, Op func(t *trace.ColumboTrace) bool, ins components.Plugin, buffer_size int, ID int) (*Filter, error) {
+func NewFilter(ctx context.Context, ins components.Plugin, buffer_size int, ID int, Op func(t *trace.ColumboTrace) bool) (*Filter, error) {
 	outs, err := components.NewDataStream(ctx, make(chan *trace.ColumboTrace, buffer_size))
 	if err != nil {
 		return nil, err
@@ -38,7 +38,11 @@ func (f *Filter) Run(ctx context.Context) error {
 	}
 	for {
 		select {
-		case t := <-ds.Data:
+		case t, ok := <-ds.Data:
+			if !ok {
+				// CHannel is closed and so are we
+				f.OutStream.Close()
+			}
 			if f.Op(t) {
 				f.OutStream.Push(t)
 			}
