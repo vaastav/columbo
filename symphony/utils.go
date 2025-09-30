@@ -45,6 +45,26 @@ func Switches(sim *Simulation) ([]components.Component, error) {
 	return switches, nil
 }
 
+func Hosts(sim *Simulation) ([]components.Component, error) {
+	var hosts []components.Component
+	for _, component := range sim.Components {
+		if _, ok := component.(*components.Host); ok {
+			hosts = append(hosts, component)
+		}
+	}
+	return hosts, nil
+}
+
+func NICs(sim *Simulation) ([]components.Component, error) {
+	var nics []components.Component
+	for _, component := range sim.Components {
+		if _, ok := component.(*components.NIC); ok {
+			nics = append(nics, component)
+		}
+	}
+	return nics, nil
+}
+
 func EthPairs(sim *Simulation) ([]EthPair, error) {
 	var pairs []EthPair
 	for _, channel := range sim.Channels {

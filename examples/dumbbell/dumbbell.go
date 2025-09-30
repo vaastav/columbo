@@ -6,9 +6,10 @@ import (
 	"sync"
 
 	"github.com/vaastav/columbo_go/components"
-	"github.com/vaastav/columbo_go/plugins/discard"
+	"github.com/vaastav/columbo_go/plugins/export"
 	"github.com/vaastav/columbo_go/plugins/network"
 	"github.com/vaastav/columbo_go/symphony"
+	"github.com/vaastav/columbo_go/trace"
 )
 
 const (
@@ -18,6 +19,11 @@ const (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	err := trace.InitJaegerExporter("http://localhost:14268/api/traces")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	readers, simulation, err := symphony.InitializeFromFile(ctx, BUFFER_SIZE)
 
@@ -42,12 +48,12 @@ func main() {
 			log.Fatal(err)
 		}
 		id++
-		ds, err := discard.NewDiscardSink(ctx, ntgen, id)
+		exp, err := export.NewExportSink(ctx, id, []components.Plugin{ntgen})
 		if err != nil {
 			log.Fatal(err)
 		}
 		id++
-		sinks = append(sinks, ds)
+		sinks = append(sinks, exp)
 	}
 	switchpairs, err := symphony.SwitchPairs(simulation)
 	if err != nil {
