@@ -84,7 +84,10 @@ func (p *NicTx) Run(ctx context.Context) error {
 	}
 	for {
 		select {
-		case t := <-ins.Data:
+		case t, ok := <-ins.Data:
+			if !ok {
+				p.OutStream.Close()
+			}
 			p.processTrace(t)
 		case <-ctx.Done():
 			p.OutStream.Close()

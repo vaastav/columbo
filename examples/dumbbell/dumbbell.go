@@ -47,6 +47,7 @@ func main() {
 	}
 	for _, h := range hosts {
 		ds, err := discard.NewDiscardSink(ctx, h, id)
+		id++
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -62,14 +63,12 @@ func main() {
 			log.Fatal(err)
 		}
 		id++
-		/*
-			nictx, err := nic.NewNicTx(ctx, dma, BUFFER_SIZE, id)
-			if err != nil {
-				log.Fatal(err)
-			}
-			id++
-		*/
-		filter, err := filter.NewFilter(ctx, dma, BUFFER_SIZE, id, func(t *trace.ColumboTrace) bool {
+		nictx, err := nic.NewNicTx(ctx, dma, BUFFER_SIZE, id)
+		if err != nil {
+			log.Fatal(err)
+		}
+		id++
+		filter, err := filter.NewFilter(ctx, nictx, BUFFER_SIZE, id, func(t *trace.ColumboTrace) bool {
 			return t.Type == trace.TRACE || t.Type == trace.SPAN
 		})
 		id++
