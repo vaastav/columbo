@@ -12,18 +12,16 @@ type NIC struct {
 }
 
 func NewNIC(ctx context.Context, Name string, ID int, buffer_size int) (*NIC, error) {
-	t := trace.NewColumboTracer(Name)
+	t, err := trace.NewColumboTracer(Name)
+	if err != nil {
+		return nil, err
+	}
 	outs, err := NewDataStream(ctx, make(chan *trace.ColumboTrace, buffer_size))
 	if err != nil {
 		return nil, err
 	}
 	NIC_comp := &NIC{
-		&baseComponent{
-			Tracer:    t,
-			Name:      Name,
-			ID:        ID,
-			OutStream: outs,
-		},
+		newBaseComponent(ID, outs, t, Name),
 	}
 	return NIC_comp, nil
 }

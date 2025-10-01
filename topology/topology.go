@@ -8,14 +8,33 @@ import (
 
 // Parse a subset of the component fields
 type Component struct {
-	Type string `json:"type"`
-	ID   int    `json:"id"`
+	Type       string `json:"type"`
+	ID         int    `json:"id"`
+	Interfaces []int  `json:"interfaces"`
+}
+
+// Parse a subset of the SimBricks system interfaces
+type Iface struct {
+	Type      string `json:"type"`
+	ID        int    `json:"id"`
+	Component int    `json:"component"`
+	Channel   int    `json:"channel"`
+}
+
+type Channel struct {
+	Type    string `json:"type"`
+	ID      int    `json:"id"`
+	Latency int    `json:"latency"`
+	IfaceA  int    `json:"interface_a"`
+	IfaceB  int    `json:"interface_b"`
 }
 
 // Parse a subset of the SimBricks system fields
 type System struct {
 	Name       string      `json:"name"`
 	Components []Component `json:"all_components"`
+	Interfaces []Iface     `json:"interfaces"`
+	Channels   []Channel   `json:"channels"`
 }
 
 // Parse a subset of the SimBricks simulator fields

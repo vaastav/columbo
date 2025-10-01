@@ -9,12 +9,14 @@ import (
 )
 
 type ExportSink struct {
-	InStreams []*components.DataStream
+	*components.BasePlugin
+	InStreams []components.Plugin
 }
 
-func NewExportSink(ctx context.Context, instreams []*components.DataStream) (*ExportSink, error) {
+func NewExportSink(ctx context.Context, ID int, instreams []components.Plugin) (*ExportSink, error) {
 	es := &ExportSink{
-		InStreams: instreams,
+		components.NewBasePlugin(ID, nil),
+		instreams,
 	}
 	return es, nil
 }
@@ -24,9 +26,9 @@ func (es *ExportSink) Run(ctx context.Context) error {
 	var wg sync.WaitGroup
 	for _, stream := range es.InStreams {
 		wg.Add(1)
-		go func(ins *components.DataStream) {
+		go func(ins components.Plugin) {
 			defer wg.Done()
-			for v := range ins.Data {
+			for v := range ins.GetOutDataStream().Data {
 				v.Export()
 			}
 		}(stream)
@@ -47,4 +49,8 @@ func (es *ExportSink) Run(ctx context.Context) error {
 		log.Println("Context is done")
 		return nil
 	}
+}
+
+func (es *ExportSink) IncomingPlugins() []components.Plugin {
+	return es.InStreams
 }

@@ -9,22 +9,22 @@ import (
 )
 
 type DiscardSink struct {
-	InStream *components.DataStream
-	ID       int
+	*components.BasePlugin
+	InStream components.Plugin
 	counter  uint64
 }
 
-func NewDiscardSink(ctx context.Context, instream *components.DataStream, id int) (*DiscardSink, error) {
+func NewDiscardSink(ctx context.Context, incoming components.Plugin, id int) (*DiscardSink, error) {
 	ds := &DiscardSink{
-		InStream: instream,
-		ID:       id,
+		components.NewBasePlugin(id, nil),
+		incoming,
+		0,
 	}
 	return ds, nil
 }
 
 func (ds *DiscardSink) Run(ctx context.Context) error {
-	log.Println("[DS-", ds.ID, "]Run function start")
-	for v := range ds.InStream.Data {
+	for v := range ds.InStream.GetOutDataStream().Data {
 		ds.counter += 1
 		ds.doNothing(v)
 		if ds.counter%1000 == 0 {
@@ -38,3 +38,7 @@ func (ds *DiscardSink) Run(ctx context.Context) error {
 }
 
 func (ds *DiscardSink) doNothing(t *trace.ColumboTrace) {}
+
+func (ds *DiscardSink) IncomingPlugins() []components.Plugin {
+	return []components.Plugin{ds.InStream}
+}
