@@ -3,9 +3,11 @@ package gem5
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/vaastav/columbo_go/events"
 	"github.com/vaastav/columbo_go/parser"
@@ -45,6 +47,11 @@ var (
 	rePCSim0SBConf = regexp.MustCompile(`(read|write)Config:\s+dev (0x[0-9a-f]+) func (\d+) reg (0|0x[0-9a-f]+) (\d+) bytes: data = (0|0x[0-9a-f]+)`)
 )
 
+var (
+	reCpuInstr   = regexp.MustCompile(`A(\d+)\s+T(\d+)\s+:\s+(0x[0-9a-fA-F]+)(?:\s+@(\w+)\+(\d+))?\s+:\s+(\w+)`)
+	reCpuMicroop = regexp.MustCompile(`A(\d+)\s+T(\d+)\s+:\s+(0x[0-9a-fA-F]+)(?:\s+@(\w+)\+(\d+))?\.\s*(\d+)\s*:\s*(\w+)`)
+)
+
 func (p *Gem5Parser) parseGlobalEvent(m []string) (*events.Event, error) {
 	id := strconv.FormatUint(p.id_cntr, 10)
 	ts, err := strconv.ParseUint(m[1], 10, 64)
@@ -68,7 +75,28 @@ func (p *Gem5Parser) parseCPUEvent(m []string) (*events.Event, error) {
 	if err != nil {
 		return nil, err
 	}
-	e := events.NewEvent(id, events.KEventT, ts, p.Identifier, p.Name, m[2])
+	e := events.NewEvent(id, events.KHostInstrT, ts, p.Identifier, p.Name, m[2])
+	if subm := reCpuInstr.FindStringSubmatch(m[2]); subm != nil {
+		e.AddAttribute("cpu_id", subm[1])
+		e.AddAttribute("tid", subm[2])
+		e.AddAttribute("addr", subm[3])
+		e.AddAttribute("type", "instr")
+		e.AddAttribute("function", subm[4])
+		e.AddAttribute("function_line", subm[5])
+		e.AddAttribute("instr_name", subm[6])
+	} else if subm := reCpuMicroop.FindStringSubmatch(m[2]); subm != nil {
+		e.AddAttribute("cpu_id", subm[1])
+		e.AddAttribute("tid", subm[2])
+		e.AddAttribute("addr", subm[3])
+		e.AddAttribute("type", "microop")
+		e.AddAttribute("function", subm[4])
+		e.AddAttribute("function_line", subm[5])
+		e.AddAttribute("instr_name", subm[6])
+		is_last_op := strings.Contains(m[2], "IsLastMicroop")
+		e.AddAttribute("is_last_microop", strconv.FormatBool(is_last_op))
+	} else {
+		return nil, fmt.Errorf("Unsupported instruction: %s", m[2])
+	}
 	return e, nil
 }
 
