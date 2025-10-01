@@ -55,22 +55,22 @@ func TestInstr(t *testing.T) {
 	line := "857006012457: system.cpu: A0 T0 : 0xffffffff81600136 @syscall_return_via_sysret+71 : sysret"
 	event, err := p.ParseEvent(line)
 	require.NotNil(t, event)
-	require.Len(t, event.Attributes, 7)
+	require.Len(t, event.Attributes, 8)
 	// Microop
 	line = "857006011458: system.cpu: A0 T0 : 0xffffffff81600132 @syscall_return_via_sysret+67. 2 : POP_R : mov rsp, rsp, t1 : IntAlu : D=0x00007fff49f994c8 flags=(IsInteger|IsMicroop|IsLastMicroop)"
 	event, err = p.ParseEvent(line)
 	require.NotNil(t, event)
-	require.Len(t, event.Attributes, 8)
+	require.Len(t, event.Attributes, 9)
 
 	// Main instr with no function name
 	line = "857006012790: system.cpu: A0 T0 : 0x7fc14f71f8b0 : cmp rax, 0xfffffffffffff000"
 	event, err = p.ParseEvent(line)
 	require.NotNil(t, event)
-	require.Len(t, event.Attributes, 7)
+	require.Len(t, event.Attributes, 8)
 
 	// Microops with no function name (along with first and last microop flags)
 	line = "857006012790: system.cpu: A0 T0 : 0x7fc14f71f8b0. 0 : CMP_R_I : limm t1, 0xfffffffffffff000 : IntAlu : D=0xfffffffffffff000 flags=(IsInteger|IsMicroop|IsDelayedCommit|IsFirstMicroop)"
 	event, err = p.ParseEvent(line)
 	require.NotNil(t, event)
-	require.Len(t, event.Attributes, 8)
+	require.Len(t, event.Attributes, 9)
 }

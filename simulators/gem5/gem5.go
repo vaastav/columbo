@@ -84,6 +84,7 @@ func (p *Gem5Parser) parseCPUEvent(m []string) (*events.Event, error) {
 		e.AddAttribute("function", subm[4])
 		e.AddAttribute("function_line", subm[5])
 		e.AddAttribute("instr_name", subm[6])
+		e.AddAttribute("exec_id", "A"+subm[1]+"T"+subm[2])
 	} else if subm := reCpuMicroop.FindStringSubmatch(m[2]); subm != nil {
 		e.AddAttribute("cpu_id", subm[1])
 		e.AddAttribute("tid", subm[2])
@@ -94,6 +95,7 @@ func (p *Gem5Parser) parseCPUEvent(m []string) (*events.Event, error) {
 		e.AddAttribute("instr_name", subm[6])
 		is_last_op := strings.Contains(m[2], "IsLastMicroop")
 		e.AddAttribute("is_last_microop", strconv.FormatBool(is_last_op))
+		e.AddAttribute("exec_id", "A"+subm[1]+"T"+subm[2])
 	} else {
 		return nil, fmt.Errorf("Unsupported instruction: %s", m[2])
 	}
