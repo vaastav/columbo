@@ -47,3 +47,11 @@ func TestFile(t *testing.T) {
 		fmt.Println("No log file provided! Skipping!")
 	}
 }
+
+func TestInstrTrace(t *testing.T) {
+	line := "857006011458: system.cpu: A0 T0 : 0xffffffff81600132 @syscall_return_via_sysret+67. 2 : POP_R : mov rsp, rsp, t1 : IntAlu : D=0x00007fff49f994c8 flags=(IsInteger|IsMicroop|IsLastMicroop)"
+	p, err := NewGem5Parser(context.Background(), 1, "gem5_parser")
+	require.NoError(t, err)
+	event, err := p.ParseEvent(line)
+	require.NotNil(t, event)
+}
