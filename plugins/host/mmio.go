@@ -94,7 +94,10 @@ func (p *HostMmioTraceGen) Run(ctx context.Context) error {
 	}
 	for {
 		select {
-		case t := <-ins.Data:
+		case t, ok := <-ins.Data:
+			if !ok {
+				return nil
+			}
 			p.processTrace(t)
 		case <-ctx.Done():
 			log.Println("Context is done. Quitting.")

@@ -70,7 +70,10 @@ func (p *HostDmaTraceGen) Run(ctx context.Context) error {
 	}
 	for {
 		select {
-		case t := <-instream.Data:
+		case t, ok := <-instream.Data:
+			if !ok {
+				return nil
+			}
 			p.processTrace(t)
 		case <-ctx.Done():
 			log.Println("Context is done. Quitting.")

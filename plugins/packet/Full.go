@@ -40,11 +40,14 @@ func (p *PacketFull) processSend(ctx context.Context) {
 	ins := p.TxStream.GetOutDataStream()
 	for {
 		select {
-		case t := <-ins.Data:
+		case t, ok := <-ins.Data:
 			// Assumption: We are only getting send traces here
 			// We can always check that tho
 
 			// This is a blocking send on the channel. This will block until a receive is complete
+			if !ok {
+				return
+			}
 			p.sendc <- t
 		case <-ctx.Done():
 			return
@@ -56,11 +59,14 @@ func (p *PacketFull) processNet(ctx context.Context) {
 	ins := p.NetStream.GetOutDataStream()
 	for {
 		select {
-		case t := <-ins.Data:
+		case t, ok := <-ins.Data:
 			// Assumption: We are only getting net traces here
 			// We probably should check that tho
 
 			// This is a blocking send on the channel. This will block until a receive is complete
+			if !ok {
+				return
+			}
 			p.netc <- t
 		case <-ctx.Done():
 			return
@@ -72,11 +78,14 @@ func (p *PacketFull) processRecv(ctx context.Context) {
 	ins := p.RxStream.GetOutDataStream()
 	for {
 		select {
-		case t := <-ins.Data:
+		case t, ok := <-ins.Data:
 			// Assumption: We are only getting net traces here
 			// We probably should check that tho
 
 			// This is a blocking send on the channel. This will block until a receive is complete
+			if !ok {
+				return
+			}
 			p.recvc <- t
 		case <-ctx.Done():
 			return
