@@ -29,6 +29,8 @@ var (
 	reGlobal    = regexp.MustCompile(`(\d+): global: simbricks: (.+)`)
 	reSystemCPU = regexp.MustCompile(`(\d+): system.cpu: (.+)`)
 	reSystemPC  = regexp.MustCompile(`(\d+): system.pc.([\w\.]+): (.+)`)
+	reInterrupt = regexp.MustCompile(`(\d+): External Interrupt: (.+)`)
+	rePageFault = regexp.MustCompile(`(\d+): Page-Fault: (.+)`)
 )
 
 var (
@@ -48,8 +50,8 @@ var (
 )
 
 var (
-	reCpuInstr   = regexp.MustCompile(`A(\d+)\s+T(\d+)\s+:\s+(0x[0-9a-fA-F]+)(?:\s+@(\w+)\+(\d+))?\s+:\s+(\w+)`)
-	reCpuMicroop = regexp.MustCompile(`A(\d+)\s+T(\d+)\s+:\s+(0x[0-9a-fA-F]+)(?:\s+@(\w+)\+(\d+))?\.\s*(\d+)\s*:\s*(\w+)`)
+	reCpuInstr   = regexp.MustCompile(`A(\d+)\s+T(\d+)\s+:\s+(0x[0-9a-fA-F]+)(?:\s+@([\w\.]+)(?:\+(\d+))?)?\s+:\s+(\w+)`)
+	reCpuMicroop = regexp.MustCompile(`A(\d+)\s+T(\d+)\s+:\s+(0x[0-9a-fA-F]+)(?:\s+@([\w\.]+)(?:\+(\d+))?)?\.\s*(\d+)\s*:\s*(\w+)`)
 )
 
 func (p *Gem5Parser) parseGlobalEvent(m []string) (*events.Event, error) {
@@ -217,17 +219,44 @@ func (p *Gem5Parser) parsePCEvent(m []string) (*events.Event, error) {
 	return nil, errors.New("Not implemented")
 }
 
+func (p *Gem5Parser) parseInterruptEvent(m []string) (*events.Event, error) {
+	id := strconv.FormatUint(p.id_cntr, 10)
+	ts, err := strconv.ParseUint(m[1], 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	e := events.NewEvent(id, events.KEventT, ts, p.Identifier, p.Name, m[2])
+	return e, nil
+}
+
+func (p *Gem5Parser) parsePageFaultEvent(m []string) (*events.Event, error) {
+	id := strconv.FormatUint(p.id_cntr, 10)
+	ts, err := strconv.ParseUint(m[1], 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	e := events.NewEvent(id, events.KEventT, ts, p.Identifier, p.Name, m[2])
+	return e, nil
+}
+
 func (p *Gem5Parser) ParseEvent(line string) (*events.Event, error) {
 	if line == "" {
 		return nil, nil
 	}
 	p.id_cntr += 1
+	if p.id_cntr%1e6 == 0 {
+		log.Println("Creating event #", p.id_cntr)
+	}
 	if m := reGlobal.FindStringSubmatch(line); m != nil {
 		return p.parseGlobalEvent(m)
 	} else if m := reSystemPC.FindStringSubmatch(line); m != nil {
 		return p.parsePCEvent(m)
 	} else if m := reSystemCPU.FindStringSubmatch(line); m != nil {
 		return p.parseCPUEvent(m)
+	} else if m := reInterrupt.FindStringSubmatch(line); m != nil {
+		return p.parseInterruptEvent(m)
+	} else if m := rePageFault.FindStringSubmatch(line); m != nil {
+		return p.parsePageFaultEvent(m)
 	}
 
 	return nil, errors.New("Failed to parse log line `" + line + "`")

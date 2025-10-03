@@ -5,6 +5,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"testing"
 
@@ -35,6 +36,9 @@ func TestFile(t *testing.T) {
 				continue
 			}
 			event, err := p.ParseEvent(scanner.Text())
+			if err != nil {
+				log.Println(scanner.Text())
+			}
 			require.NoError(t, err)
 			if event == nil {
 				t.Log(scanner.Text())
@@ -73,4 +77,39 @@ func TestInstr(t *testing.T) {
 	event, err = p.ParseEvent(line)
 	require.NotNil(t, event)
 	require.Len(t, event.Attributes, 9)
+
+	// Edgecases from testing!
+	// Main instr with function name but no line number
+	line = "857006012790: system.cpu: A0 T0 : 0xffffffff814e6819 @mutex_unlock    : xor  edx"
+	event, err = p.ParseEvent(line)
+	require.Nil(t, err)
+	require.NotNil(t, event)
+	// Microop with function name but no line number
+	line = "857006012790: system.cpu: A0 T0 : 0xffffffff814e6819 @mutex_unlock. 0 :   XOR_R_R : xor   edx, edx, edx : IntAlu :  D=0x0000000000000000  flags=(IsInteger|IsMicroop|IsLastMicroop|IsFirstMicroop)"
+	event, err = p.ParseEvent(line)
+	require.Nil(t, err)
+	require.NotNil(t, event)
+	// Function name with .
+	line = "857006012790: system.cpu: A0 T0 : 0xffffffff811414bf @slab_pre_alloc_hook.constprop.0    : push      r12"
+	event, err = p.ParseEvent(line)
+	require.Nil(t, err)
+	require.NotNil(t, event)
+}
+
+func TestInterrupt(t *testing.T) {
+	p, err := NewGem5Parser(context.Background(), 1, "gem5_parser")
+	require.NoError(t, err)
+	line := "850527080541: External Interrupt: RIP 0xffffffff812b781c: vector 236: #INTR"
+	event, err := p.ParseEvent(line)
+	require.NoError(t, err)
+	require.NotNil(t, event)
+}
+
+func TestPageFault(t *testing.T) {
+	p, err := NewGem5Parser(context.Background(), 1, "gem5_parser")
+	require.NoError(t, err)
+	line := "851993906913: Page-Fault: RIP 0x7fec71f4df04: vector 14: #PF(0x14) at 0x7fec71f4df00"
+	event, err := p.ParseEvent(line)
+	require.NoError(t, err)
+	require.NotNil(t, event)
 }

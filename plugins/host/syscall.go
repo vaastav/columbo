@@ -67,6 +67,7 @@ func (s *Syscall) processTrace(t *trace.ColumboTrace) {
 					s.trace_states[exec_id] = state
 					is_last_microop := t.Attributes["is_last_microop"]
 					if is_last_microop == "true" {
+						log.Println("Pushed syscall")
 						s.OutStream.Push(state)
 						s.trace_states[exec_id] = nil
 						delete(s.status, exec_id)
