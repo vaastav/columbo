@@ -24,7 +24,8 @@ func StartProcessing(readers map[string]*parser.Reader, sim_instances map[string
 		log.Println("Adding a wait element")
 		instance := sim_instances[sim_name]
 		if instance == nil {
-			return fmt.Errorf("No simulator instance found for the reader", sim_name)
+			fmt.Println("Sim Instances: %v", sim_instances)
+			return fmt.Errorf("No simulator instance found for the reader %s", sim_name)
 		}
 		go func(name string, reader *parser.Reader, instance *SimInstance) {
 			defer wg.Done()

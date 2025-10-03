@@ -113,8 +113,8 @@ func (p *NS3Parser) ParseEvent(line string) (*events.Event, error) {
 		return nil, nil
 	}
 	p.id_cntr += 1
+	id := strconv.FormatUint(p.id_cntr, 10)
 	if m := reLogPattern.FindStringSubmatch(line); m != nil {
-		id := strconv.FormatUint(p.id_cntr, 10)
 		ts, err := strconv.ParseFloat(m[1], 64)
 		if err != nil {
 			return nil, err
@@ -147,6 +147,9 @@ func (p *NS3Parser) ParseEvent(line string) (*events.Event, error) {
 		e.AddAttribute("class", class)
 		e.AddAttribute("method", method)
 		e.AddAttribute("devid", devid)
+		return e, nil
+	} else if strings.Contains(line, "DoDispose()") {
+		e := events.NewEvent(id, events.KEventT, 0, p.Identifier, p.Name, line)
 		return e, nil
 	}
 

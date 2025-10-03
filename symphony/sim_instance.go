@@ -11,6 +11,7 @@ import (
 	"github.com/vaastav/columbo_go/simulators/gem5"
 	"github.com/vaastav/columbo_go/simulators/netswitch"
 	"github.com/vaastav/columbo_go/simulators/nicbm"
+	"github.com/vaastav/columbo_go/simulators/ns3"
 	"github.com/vaastav/columbo_go/topology"
 )
 
@@ -115,6 +116,8 @@ func CreateSimInstanceFromTopology(ctx context.Context, topo *topology.Topology,
 			p, err = nicbm.NewNicBMParser(ctx, sim.ID, sim.Name)
 		case "SwitchNet":
 			p, err = netswitch.NewNetSwitchParser(ctx, sim.ID, sim.Name)
+		case "NS3Net":
+			p, err = ns3.NewNS3Parser(ctx, sim.ID, sim.Name)
 		default:
 			return nil, errors.New("Unsupported parser type " + sim.Type)
 		}
