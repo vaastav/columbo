@@ -13,6 +13,7 @@ type Filter struct {
 	*components.BasePlugin
 	Op       func(t *trace.ColumboTrace) bool
 	InStream components.Plugin
+	cntr     uint64
 }
 
 func NewFilter(ctx context.Context, ins components.Plugin, buffer_size int, ID int, Op func(t *trace.ColumboTrace) bool) (*Filter, error) {
@@ -25,6 +26,7 @@ func NewFilter(ctx context.Context, ins components.Plugin, buffer_size int, ID i
 		components.NewBasePlugin(ID, outs),
 		Op,
 		ins,
+		0,
 	}
 	f.OutStream = outs
 
@@ -42,6 +44,10 @@ func (f *Filter) Run(ctx context.Context) error {
 			if !ok {
 				// CHannel is closed and so are we
 				f.OutStream.Close()
+			}
+			f.cntr++
+			if f.cntr%1000 == 0 {
+				log.Println("Filter received event # ", f.cntr)
 			}
 			if f.Op(t) {
 				f.OutStream.Push(t)

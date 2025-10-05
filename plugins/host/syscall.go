@@ -22,6 +22,7 @@ type Syscall struct {
 	InStream     components.Plugin
 	trace_states map[string]*trace.ColumboTrace
 	status       map[string]SyscallStatus
+	cntr         uint64
 }
 
 func NewSyscall(ctx context.Context, ins components.Plugin, buffer_size int, ID int) (*Syscall, error) {
@@ -35,15 +36,18 @@ func NewSyscall(ctx context.Context, ins components.Plugin, buffer_size int, ID 
 		ins,
 		make(map[string]*trace.ColumboTrace),
 		make(map[string]SyscallStatus),
+		0,
 	}
 	return syscall, nil
 }
 
-func (s *Syscall) mergeStates(t1, t2 *trace.ColumboTrace) *trace.ColumboTrace {
-	return mergeTraces(t1, t2, "syscall")
+func (s *Syscall) mergeStates(state, t2 *trace.ColumboTrace) {
+	state.Attributes["span_type"] = "syscall"
+	state.Spans[0].Events = append(state.Spans[0].Events, t2.Spans[0].Events...)
 }
 
 func (s *Syscall) processTrace(t *trace.ColumboTrace) {
+	s.cntr++
 	if t.Type == trace.SPAN || t.Type == trace.TRACE {
 		s.OutStream.Push(t)
 		return
@@ -55,7 +59,7 @@ func (s *Syscall) processTrace(t *trace.ColumboTrace) {
 			if v, ok := s.status[exec_id]; ok {
 				if v == INSYSCALL {
 					state := s.trace_states[exec_id]
-					state = s.mergeStates(state, t)
+					s.mergeStates(state, t)
 					s.trace_states[exec_id] = state
 					instr := t.Attributes["instr_name"]
 					if instr == "sysret" {
@@ -63,11 +67,10 @@ func (s *Syscall) processTrace(t *trace.ColumboTrace) {
 					}
 				} else if v == INSYSRET {
 					state := s.trace_states[exec_id]
-					state = s.mergeStates(state, t)
+					s.mergeStates(state, t)
 					s.trace_states[exec_id] = state
 					is_last_microop := t.Attributes["is_last_microop"]
 					if is_last_microop == "true" {
-						log.Println("Pushed syscall")
 						s.OutStream.Push(state)
 						s.trace_states[exec_id] = nil
 						delete(s.status, exec_id)
