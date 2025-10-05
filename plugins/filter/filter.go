@@ -44,6 +44,7 @@ func (f *Filter) Run(ctx context.Context) error {
 			if !ok {
 				// CHannel is closed and so are we
 				f.OutStream.Close()
+				return nil
 			}
 			f.cntr++
 			if f.cntr%1000 == 0 {
