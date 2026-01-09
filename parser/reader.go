@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -34,6 +35,7 @@ func (r *Reader) ProcessLog(ctx context.Context, fn ProcessFn) error {
 }
 
 func (r *Reader) ProcessFromLogFile(ctx context.Context, fn ProcessFn) error {
+	log.Println("Starting processing from", r.Path)
 	file, err := os.Open(r.Path)
 	if err != nil {
 		return err

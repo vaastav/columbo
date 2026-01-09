@@ -97,6 +97,7 @@ func (s *Syscall) Run(ctx context.Context) error {
 	if instream == nil {
 		return errors.New("Incoming plugin has a nil stream")
 	}
+	log.Println("Running syscall plugin #", s.ID)
 	for {
 		select {
 		case t, ok := <-instream.Data:

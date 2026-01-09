@@ -62,7 +62,7 @@ func LaunchPlugin(ctx context.Context, wg *sync.WaitGroup, bp Plugin) {
 	for _, incoming := range bp.IncomingPlugins() {
 		LaunchPlugin(ctx, wg, incoming)
 	}
-	log.Println("Adding a wait element")
+	log.Println("Adding a wait element for a plugin")
 	wg.Add(1)
 	go func() {
 		defer wg.Done()

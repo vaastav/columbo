@@ -21,7 +21,7 @@ func StartProcessing(readers map[string]*parser.Reader, sim_instances map[string
 	// Start the processing
 	for sim_name, reader := range readers {
 		wg.Add(1)
-		log.Println("Adding a wait element")
+		log.Println("Adding a wait element for reader")
 		instance := sim_instances[sim_name]
 		if instance == nil {
 			fmt.Println("Sim Instances: %v", sim_instances)
